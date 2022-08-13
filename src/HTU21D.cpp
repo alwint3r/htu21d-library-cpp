@@ -73,20 +73,16 @@ namespace HTU21D
         }
 
         delay_(50);
+
         auto retryCount = 0;
         auto maxRetry = 30;
-
-        while (true)
+        while (retryCount < maxRetry)
         {
             auto readResult = hal_->read(3);
             if (readResult.first < 3)
             {
                 delay_(50);
-                if (retryCount++ >= maxRetry)
-                {
-                    break;
-                }
-
+                retryCount++;
                 continue;
             }
 
