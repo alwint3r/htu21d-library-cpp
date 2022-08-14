@@ -13,6 +13,9 @@ Support for more platform may be added later on, but for now you can:
 * Implement the I2C HAL interface (See src/interfaces/HTU21D-I2C-HAL.h file)
 * Implement the delay function interface (See src/interfaces/Delay-HAL.h file)
 
+## Stability
+
+This library is still in early stage. Expect breaking changes until further notice.
 
 ## Usage
 
