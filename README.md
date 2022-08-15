@@ -41,16 +41,14 @@ void loop()
     auto temp = sensor.measureTemperature();
     auto hum = sensor.measureHumidity();
 
-    if (temp.first == HTU21D::ERROR_NONE)
+    if (temp.status == HTU21D::SENSOR_OK)
     {
-        Serial.print("Temperature: ");
-        Serial.println(temp.second);
+        Serial.printf("Temperature: %f, ", temp.data);
     }
 
-    if (hum.first == HTU21D::ERROR_NONE)
+    if (hum.status == HTU21D::SENSOR_OK)
     {
-        Serial.print("Humidity: ");
-        Serial.println(hum.second);
+        Serial.printf("Humidity: %f\r\n", hum.data);
     }
 
     delay(1000);
