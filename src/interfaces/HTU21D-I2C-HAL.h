@@ -8,9 +8,26 @@
 namespace HTU21D
 {
     using BytesVec = std::vector<uint8_t>;
-    using ReadResult = std::pair<int, BytesVec>;
-    using WriteResult = int;
-    using RegAddress = uint8_t;
+    enum WriteResult
+    {
+        I2C_WRITE_OK,
+        I2C_ERROR_WRITE_FAILURE,
+        I2C_ERROR_WRITE_TIMEOUT,
+        I2C_WRITE_ERROR_UNKNOWN
+    };
+
+    enum ReadStatus
+    {
+        I2C_READ_OK,
+        I2C_READ_INSUFFICIENT_DATA,
+        I2C_READ_ERROR_UNKNOWN,
+    };
+
+    struct ReadResult
+    {
+        ReadStatus status;
+        BytesVec data;
+    };
 
     class I2CHAL
     {
@@ -20,7 +37,7 @@ namespace HTU21D
 
         virtual ReadResult read(size_t length) = 0;
         virtual WriteResult write(uint8_t data) = 0;
-        virtual WriteResult write(RegAddress addr, uint8_t data) = 0;
+        virtual WriteResult write(uint8_t addr, uint8_t data) = 0;
     };
 };
 

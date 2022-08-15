@@ -7,14 +7,17 @@
 
 namespace HTU21D
 {
-    enum ErrorType {
-        ERROR_NONE,
-        ERORR_TIMEOUT,
-        ERROR_CRC_INVALID,
-        ERORR_WRITE_FAILURE,
+    enum MeasurementStatus {
+        SENSOR_OK,
+        SENSOR_ERROR_COMMUNICATION,
+        SENSOR_ERROR_DATA_CORRUPT,
+        SENSOR_ERROR_UNKNOWN,
     };
 
-    using MeasurementResult = std::pair<ErrorType, double>;
+    struct MeasurementResult {
+        MeasurementStatus status;
+        double data;
+    };
 
     class Sensor
     {
@@ -25,7 +28,7 @@ namespace HTU21D
         MeasurementResult measureHumidity();
 
     private:
-        using CommandResult = std::pair<ErrorType, BytesVec>;
+        using CommandResult = std::pair<MeasurementStatus, BytesVec>;
         CommandResult getCommandResult(uint8_t command);
 
     private:

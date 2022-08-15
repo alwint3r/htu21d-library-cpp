@@ -30,10 +30,15 @@ namespace HTU21D
 
     MeasurementResult Sensor::measureHumidity()
     {
+        MeasurementResult result = {};
+        result.status = SENSOR_OK;
+        result.data = 0.0;
+
         auto res = getCommandResult(CMD_MEASURE_HUMIDITY_NO_HOLD);
-        if (res.first != ERROR_NONE)
+        if (res.first != SENSOR_OK)
         {
-            return std::make_pair(res.first, 0.0);
+            result.status = res.first;
+            return result;
         }
 
         auto msb = res.second[0];
@@ -43,15 +48,22 @@ namespace HTU21D
         uint16_t raw = msb << 8 | cleanedLsb;
         auto value = -6 + (125 * (raw / 65536.0));
 
-        return std::make_pair(ERROR_NONE, value);
+        result.data = value;
+
+        return result;
     }
 
     MeasurementResult Sensor::measureTemperature()
     {
+        MeasurementResult result = {};
+        result.status = SENSOR_OK;
+        result.data = 0.0;
+
         auto res = getCommandResult(CMD_MEASURE_TEMPERATURE_NO_HOLD);
-        if (res.first != ERROR_NONE)
+        if (res.first != SENSOR_OK)
         {
-            return std::make_pair(res.first, 0.0);
+            result.status = res.first;
+            return result;
         }
 
         auto msb = res.second[0];
@@ -61,15 +73,17 @@ namespace HTU21D
         uint16_t raw = msb << 8 | cleanedLsb;
         auto value = -46.85 + (175.72 * (raw / 65536.0));
 
-        return std::make_pair(ERROR_NONE, value);
+        result.data = value;
+
+        return result;
     }
 
     Sensor::CommandResult Sensor::getCommandResult(uint8_t command)
     {
         auto res = hal_->write(command);
-        if (res != 0)
+        if (res != I2C_WRITE_OK)
         {
-            return std::make_pair(ERORR_WRITE_FAILURE, BytesVec{});
+            return std::make_pair(HTU21D::SENSOR_ERROR_COMMUNICATION, BytesVec{});
         }
 
         delay_(50);
@@ -79,24 +93,24 @@ namespace HTU21D
         while (retryCount < maxRetry)
         {
             auto readResult = hal_->read(3);
-            if (readResult.first < 3)
+            if (readResult.status == I2C_READ_INSUFFICIENT_DATA)
             {
                 delay_(50);
                 retryCount++;
                 continue;
             }
 
-            auto crc = readResult.second[2];
+            auto crc = readResult.data[2];
 
-            auto calculatedCrc = crc8(readResult.second.data(), 2);
+            auto calculatedCrc = crc8(readResult.data.data(), 2);
             if (crc != calculatedCrc)
             {
-                return std::make_pair(ERROR_CRC_INVALID, BytesVec{});
+                return std::make_pair(SENSOR_ERROR_DATA_CORRUPT, BytesVec{});
             }
 
-            return std::make_pair(ERROR_NONE, readResult.second);
+            return std::make_pair(SENSOR_OK, readResult.data);
         }
 
-        return std::make_pair(ERORR_TIMEOUT, BytesVec{});
+        return std::make_pair(SENSOR_ERROR_COMMUNICATION, BytesVec{});
     }
 };

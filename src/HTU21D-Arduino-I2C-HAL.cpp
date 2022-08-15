@@ -11,37 +11,63 @@ namespace HTU21D
 
     HTU21D::ReadResult ArduinoI2CHAL::read(size_t length)
     {
+        HTU21D::ReadResult result = {};
+        result.status = HTU21D::I2C_READ_OK;
+        result.data = HTU21D::BytesVec{};
+
         auto res = wire_->requestFrom(addr_, length);
         if (res < length)
         {
-            return std::make_pair(res, HTU21D::BytesVec{});
+            result.status = HTU21D::I2C_READ_INSUFFICIENT_DATA;
+            return result;
         }
 
-        auto data = HTU21D::BytesVec{};
-        data.reserve(res);
+        result.data.reserve(res);
         for (auto i = 0; i < res; i++)
         {
-            data.push_back(Wire.read());
+            result.data.push_back(Wire.read());
         }
 
-        return std::make_pair(res, data);
+        return result;
     }
 
     HTU21D::WriteResult ArduinoI2CHAL::write(uint8_t data)
     {
-        wire_->beginTransmission(addr_);
-        wire_->write(data);
-        return wire_->endTransmission();
+        return doWrite((const uint8_t*)&data, 1);
     }
 
-    HTU21D::WriteResult ArduinoI2CHAL::write(HTU21D::RegAddress addr, uint8_t data)
+    HTU21D::WriteResult ArduinoI2CHAL::write(uint8_t addr, uint8_t data)
+    {
+        const uint8_t buffer[2] = { addr, data };
+        return doWrite(buffer, 2);
+    }
+
+    HTU21D::WriteResult ArduinoI2CHAL::doWrite(const uint8_t *data, size_t length)
     {
         wire_->beginTransmission(addr_);
-        wire_->write(addr);
-        wire_->write(data);
-        return wire_->endTransmission();
-    }
+        for (auto i = 0; i < length; i++)
+        {
+            wire_->write(data[i]);
+        }
 
+        auto res = wire_->endTransmission();
+        if (res == 0)
+        {
+            return HTU21D::I2C_WRITE_OK;
+        }
+        else if (res == 2)
+        {
+            return HTU21D::I2C_ERROR_WRITE_FAILURE;
+        }
+        else if (res == 5)
+        {
+            return HTU21D::I2C_ERROR_WRITE_TIMEOUT;
+        }
+        else
+        {
+            return HTU21D::I2C_WRITE_ERROR_UNKNOWN;
+        }
+    }
 };
 
 #endif

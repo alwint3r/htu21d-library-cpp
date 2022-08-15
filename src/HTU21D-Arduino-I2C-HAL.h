@@ -17,7 +17,10 @@ namespace HTU21D
 
         virtual HTU21D::ReadResult read(size_t length);
         virtual HTU21D::WriteResult write(uint8_t data);
-        virtual HTU21D::WriteResult write(HTU21D::RegAddress addr, uint8_t data);
+        virtual HTU21D::WriteResult write(uint8_t addr, uint8_t data);
+    
+    private:
+        HTU21D::WriteResult doWrite(const uint8_t* data, size_t length);
 
     private:
         TwoWire *wire_;
